@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import ThemeToggle from '../components/ThemeToggle'
+import LoginDialog from '../features/auth/components/LoginDialog'
+import { useAuthStore } from '../features/auth/hooks/useAuthStore'
 import type { Post } from '../types'
 
 // Mock data
@@ -15,6 +18,13 @@ const mockPosts: Post[] = [
 ]
 
 export default function PostListPage() {
+    const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false)
+    const { isAuthenticated, logout } = useAuthStore()
+
+    const handleLogout = () => {
+        logout()
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Top Header */}
@@ -24,6 +34,21 @@ export default function PostListPage() {
                         📚 HHBookClub
                     </Link>
                     <div className="flex items-center gap-3">
+                        {isAuthenticated ? (
+                            <button
+                                onClick={handleLogout}
+                                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                            >
+                                로그아웃
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => setIsLoginDialogOpen(true)}
+                                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                            >
+                                로그인
+                            </button>
+                        )}
                         <ThemeToggle />
                     </div>
                 </div>
@@ -109,6 +134,11 @@ export default function PostListPage() {
                     </button>
                 </div>
             </div>
+
+            <LoginDialog
+                isOpen={isLoginDialogOpen}
+                onClose={() => setIsLoginDialogOpen(false)}
+            />
         </div>
     )
 }
