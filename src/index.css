@@ -1,38 +1,8 @@
 @import "tailwindcss";
 
-/* Theme variables */
-:root,
-[data-theme="dark"] {
-  --color-primary: #646cff;
-  --color-primary-hover: #747bff;
-  --color-bg: #0a0a0a;
-  --color-bg-card: #141414;
-  --color-bg-hover: #1f1f1f;
-  --color-text: #fafafa;
-  --color-text-muted: #a1a1aa;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-hover: rgba(100, 108, 255, 0.4);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="light"] {
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-bg: #f8fafc;
-  --color-bg-card: #ffffff;
-  --color-bg-hover: #f1f5f9;
-  --color-text: #0f172a;
-  --color-text-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-border-hover: #4f46e5;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-hover: 0 10px 40px rgba(79, 70, 229, 0.12), 0 4px 12px rgba(0, 0, 0, 0.05);
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
 }

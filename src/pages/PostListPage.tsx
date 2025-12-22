@@ -2,88 +2,113 @@ import { Link } from 'react-router-dom'
 import ThemeToggle from '../components/ThemeToggle'
 import type { Post } from '../types'
 
-// Mock data for now
+// Mock data
 const mockPosts: Post[] = [
-    {
-        id: 1,
-        title: '첫 번째 게시글입니다',
-        author: '홍길동',
-        date: '2025-12-22',
-        excerpt: '이것은 첫 번째 게시글의 미리보기입니다. 블로그 스타일로 깔끔하게 보여줍니다...',
-        views: 124,
-    },
-    {
-        id: 2,
-        title: '두 번째 게시글 - React 사용법',
-        author: '김철수',
-        date: '2025-12-21',
-        excerpt: 'React를 사용하여 웹 애플리케이션을 만드는 방법에 대해 알아봅니다...',
-        views: 89,
-    },
-    {
-        id: 3,
-        title: '세 번째 게시글 - TypeScript 기초',
-        author: '이영희',
-        date: '2025-12-20',
-        excerpt: 'TypeScript의 기본 문법과 사용법에 대해 설명합니다...',
-        views: 256,
-    },
+    { id: 101234, title: '첫 번째 게시글입니다', author: '독서가', date: '12:45', views: 124, excerpt: '' },
+    { id: 101233, title: '두 번째 게시글 - React 사용법', author: '김철수', date: '12:30', views: 89, excerpt: '' },
+    { id: 101232, title: '세 번째 게시글 - TypeScript 기초', author: '개발자A', date: '11:55', views: 256, excerpt: '' },
+    { id: 101231, title: '네 번째 게시글 - Tailwind CSS 완벽 가이드', author: '코딩왕', date: '11:20', views: 512, excerpt: '' },
+    { id: 101230, title: '다섯 번째 게시글 - Next.js 14 업데이트 정리', author: '프론트엔드', date: '10:45', views: 1024, excerpt: '' },
+    { id: 101229, title: '여섯 번째 게시글 - 개발자 취업 후기', author: '취준생', date: '10:15', views: 2048, excerpt: '' },
+    { id: 101228, title: '일곱 번째 게시글 - 알고리즘 공부법', author: '알고리즘러', date: '09:30', views: 789, excerpt: '' },
+    { id: 101227, title: '여덟 번째 게시글 - 프론트엔드 로드맵 2025', author: '시니어', date: '25.12.21', views: 3500, excerpt: '' },
 ]
 
 export default function PostListPage() {
     return (
-        <div className="min-h-screen flex flex-col bg-[var(--color-bg)] transition-colors duration-300">
-            {/* Header */}
-            <header className="sticky top-0 z-50 flex justify-between items-center px-8 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[var(--shadow-card)] backdrop-blur-sm">
-                <Link to="/" className="text-xl font-bold text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors">
-                    📚 HHBookClub
-                </Link>
-                <nav className="flex items-center gap-3">
-                    <ThemeToggle />
-                    <Link
-                        to="/write"
-                        className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-lg font-medium hover:bg-[var(--color-primary-hover)] hover:shadow-lg hover:shadow-[var(--color-primary)]/25 transition-all duration-200"
-                    >
-                        ✏️ 글쓰기
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            {/* Top Header */}
+            <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+                    <Link to="/" className="text-xl font-bold text-gray-700 dark:text-gray-200">
+                        📚 HHBookClub
                     </Link>
-                    <Link
-                        to="/login"
-                        className="px-5 py-2.5 border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-bg-hover)] transition-all duration-200"
-                    >
-                        로그인
-                    </Link>
-                </nav>
+                    <div className="flex items-center gap-3">
+                        <ThemeToggle />
+                    </div>
+                </div>
             </header>
 
-            {/* Content */}
-            <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold mb-8 text-[var(--color-text)]">
-                    📋 게시판
-                </h1>
+            {/* Navigation Bar */}
+            <nav className="bg-gray-700 dark:bg-gray-800 text-white">
+                <div className="max-w-5xl mx-auto px-4">
+                    <ul className="flex gap-6 text-sm font-medium">
+                        <li className="py-2.5 border-b-2 border-white">게시판</li>
+                    </ul>
+                </div>
+            </nav>
 
-                <ul className="flex flex-col gap-4">
-                    {mockPosts.map((post) => (
-                        <li
-                            key={post.id}
-                            className="group bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-[var(--color-border-hover)] hover:-translate-y-1 transition-all duration-300"
+            {/* Gallery Header */}
+            <div className="max-w-5xl mx-auto px-4 py-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">📋 게시글</h1>
+                    <Link
+                        to="/write"
+                        className="px-4 py-2 bg-gray-700 dark:bg-gray-600 text-white text-sm rounded hover:bg-gray-800 dark:hover:bg-gray-500 transition-colors"
+                    >
+                        글쓰기
+                    </Link>
+                </div>
+
+
+            </div>
+
+            {/* Post Table */}
+            <div className="max-w-5xl mx-auto px-4 pb-8">
+                <table className="w-full text-sm border-t-2 border-gray-400 dark:border-gray-500">
+                    <thead className="bg-gray-100 dark:bg-gray-800">
+                        <tr className="border-b border-gray-200 dark:border-gray-700">
+                            <th className="py-2 px-3 text-center text-gray-600 dark:text-gray-400 font-medium w-16">번호</th>
+                            <th className="py-2 px-3 text-left text-gray-600 dark:text-gray-400 font-medium">제목</th>
+                            <th className="py-2 px-3 text-center text-gray-600 dark:text-gray-400 font-medium w-24">닉네임</th>
+                            <th className="py-2 px-3 text-center text-gray-600 dark:text-gray-400 font-medium w-20">작성일</th>
+                            <th className="py-2 px-3 text-center text-gray-600 dark:text-gray-400 font-medium w-16">조회</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800">
+                        {mockPosts.map((post) => (
+                            <tr key={post.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td className="py-2.5 px-3 text-center text-gray-400 dark:text-gray-500 text-xs">{post.id}</td>
+                                <td className="py-2.5 px-3">
+                                    <Link
+                                        to={`/posts/${post.id}`}
+                                        className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-white hover:underline"
+                                    >
+                                        {post.title}
+                                        <span className="ml-1 text-gray-500 dark:text-gray-400 font-bold">[3]</span>
+                                    </Link>
+                                </td>
+                                <td className="py-2.5 px-3 text-center text-xs">
+                                    <span className="text-gray-600 dark:text-gray-300">{post.author}</span>
+                                </td>
+                                <td className="py-2.5 px-3 text-center text-gray-400 dark:text-gray-500 text-xs">{post.date}</td>
+                                <td className="py-2.5 px-3 text-center text-gray-500 dark:text-gray-400 text-xs">{post.views}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                {/* Pagination */}
+                <div className="flex justify-center gap-1 mt-6">
+                    <button className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        ◀ 이전
+                    </button>
+                    {[1, 2, 3, 4, 5].map((page) => (
+                        <button
+                            key={page}
+                            className={`px-3 py-1.5 text-sm border rounded ${page === 1
+                                ? 'bg-gray-700 dark:bg-gray-600 text-white border-gray-700 dark:border-gray-600'
+                                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                }`}
                         >
-                            <Link to={`/posts/${post.id}`} className="block p-6">
-                                <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2 group-hover:text-[var(--color-primary)] transition-colors">
-                                    {post.title}
-                                </h2>
-                                <p className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed">
-                                    {post.excerpt}
-                                </p>
-                                <div className="flex gap-4 text-xs text-[var(--color-text-muted)]">
-                                    <span className="font-medium text-[var(--color-primary)]">{post.author}</span>
-                                    <span>{post.date}</span>
-                                    <span className="ml-auto">👁 {post.views}</span>
-                                </div>
-                            </Link>
-                        </li>
+                            {page}
+                        </button>
                     ))}
-                </ul>
-            </main>
+                    <button className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        다음 ▶
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }
