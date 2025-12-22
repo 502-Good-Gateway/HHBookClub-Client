@@ -1,71 +1,70 @@
-name: Frontend CI
+name: Frontend CI (dev)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
+      - uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: npm ci
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
-    - name: Build
-      run: npm run build
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Check build output
-      run: |
-        if [ ! -d "dist" ]; then
-          echo "Build failed: 'dist' directory not found."
-          exit 1
-        fi
+      - name: Build
+        run: npm run build
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist
-        path: dist
+      - name: Check build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Build failed: 'dist' directory not found."
+            exit 1
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
 
   deploy:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: dist
-        path: dist
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    # 1. Assets (Long Cache)
-    - name: Deploy Assets to S3
-      run: |
-        aws s3 sync ./dist/assets s3://${{ secrets.AWS_S3_BUCKET }}/assets \
-          --delete \
-          --cache-control "max-age=31536000,public,immutable"
+      # 1. Assets (Long Cache)
+      - name: Deploy Assets to S3
+        run: |
+          aws s3 sync ./dist/assets s3://${{ secrets.AWS_S3_BUCKET }}/assets \
+            --delete \
+            --cache-control "max-age=31536000,public,immutable"
 
-    # 2. Root Files (No Cache / Short Cache)
-    - name: Deploy Root to S3
-      run: |
-        aws s3 sync ./dist s3://${{ secrets.AWS_S3_BUCKET }} \
-          --exclude "assets/*" \
-          --delete \
-          --cache-control "no-cache,no-store,must-revalidate"
-
-
+      # 2. Root Files (No Cache)
+      - name: Deploy Root to S3
+        run: |
+          aws s3 sync ./dist s3://${{ secrets.AWS_S3_BUCKET }} \
+            --exclude "assets/*" \
+            --delete \
+            --cache-control "no-cache,no-store,must-revalidate"
