@@ -14,7 +14,7 @@ export default function LandingPage() {
             <main className="landing-hero">
                 <h1 className="hero-title">
                     Elevate Your <br />
-                    <span className="gradient-text">Reading Experience</span>
+                    <span className="gradient-text">Reading Experience!!</span>
                 </h1>
                 <p className="hero-subtitle">
                     Join the exclusive community where knowledge meets networking.
