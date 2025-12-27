@@ -3,26 +3,60 @@ import { useState } from 'react'
 import ThemeToggle from '../components/ThemeToggle'
 import LoginDialog from '../features/auth/components/LoginDialog'
 import { useAuthStore } from '../features/auth/hooks/useAuthStore'
-import type { Post } from '../types'
+import { usePostList } from '../features/posts/hooks/usePosts'
 
-// Mock data
-const mockPosts: Post[] = [
-    { id: 101234, title: '첫 번째 게시글입니다', author: '독서가', date: '12:45', views: 124, excerpt: '' },
-    { id: 101233, title: '두 번째 게시글 - React 사용법', author: '김철수', date: '12:30', views: 89, excerpt: '' },
-    { id: 101232, title: '세 번째 게시글 - TypeScript 기초', author: '개발자A', date: '11:55', views: 256, excerpt: '' },
-    { id: 101231, title: '네 번째 게시글 - Tailwind CSS 완벽 가이드', author: '코딩왕', date: '11:20', views: 512, excerpt: '' },
-    { id: 101230, title: '다섯 번째 게시글 - Next.js 14 업데이트 정리', author: '프론트엔드', date: '10:45', views: 1024, excerpt: '' },
-    { id: 101229, title: '여섯 번째 게시글 - 개발자 취업 후기', author: '취준생', date: '10:15', views: 2048, excerpt: '' },
-    { id: 101228, title: '일곱 번째 게시글 - 알고리즘 공부법', author: '알고리즘러', date: '09:30', views: 789, excerpt: '' },
-    { id: 101227, title: '여덟 번째 게시글 - 프론트엔드 로드맵 2025', author: '시니어', date: '25.12.21', views: 3500, excerpt: '' },
-]
+/**
+ * Formats date string for display
+ * Shows time if today, otherwise shows date
+ */
+const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    const today = new Date()
+    const isToday = date.toDateString() === today.toDateString()
+
+    if (isToday) {
+        return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+    }
+    return date.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' })
+}
 
 export default function PostListPage() {
     const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
     const { isAuthenticated, logout } = useAuthStore()
+
+    const { data, isLoading, isError, error } = usePostList({
+        page: currentPage,
+        limit: 20,
+        sort: 'latest',
+    })
 
     const handleLogout = () => {
         logout()
+    }
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+    }
+
+    // Generate page numbers for pagination
+    const getPageNumbers = (): number[] => {
+        if (!data) return [1]
+        const totalPages = data.totalPages
+        const current = currentPage
+        const pages: number[] = []
+
+        let start = Math.max(1, current - 2)
+        const end = Math.min(totalPages, start + 4)
+
+        if (end - start < 4) {
+            start = Math.max(1, end - 4)
+        }
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i)
+        }
+        return pages
     }
 
     return (
@@ -35,12 +69,20 @@ export default function PostListPage() {
                     </Link>
                     <div className="flex items-center gap-3">
                         {isAuthenticated ? (
-                            <button
-                                onClick={handleLogout}
-                                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                            >
-                                로그아웃
-                            </button>
+                            <>
+                                <Link
+                                    to="/my"
+                                    className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                >
+                                    마이페이지
+                                </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                >
+                                    로그아웃
+                                </button>
+                            </>
                         ) : (
                             <button
                                 onClick={() => setIsLoginDialogOpen(true)}
@@ -74,8 +116,6 @@ export default function PostListPage() {
                         글쓰기
                     </Link>
                 </div>
-
-
             </div>
 
             {/* Post Table */}
@@ -91,7 +131,47 @@ export default function PostListPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800">
-                        {mockPosts.map((post) => (
+                        {/* Loading State */}
+                        {isLoading && (
+                            <tr>
+                                <td colSpan={5} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-gray-300 rounded-full animate-spin" />
+                                        <span>게시글을 불러오는 중...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+
+                        {/* Error State */}
+                        {isError && (
+                            <tr>
+                                <td colSpan={5} className="py-12 text-center text-red-500 dark:text-red-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <span className="text-2xl">⚠️</span>
+                                        <span>게시글을 불러오는데 실패했습니다.</span>
+                                        <span className="text-sm text-gray-500">
+                                            {error instanceof Error ? error.message : '알 수 없는 오류'}
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+
+                        {/* Empty State */}
+                        {!isLoading && !isError && data?.content?.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <span className="text-2xl">📭</span>
+                                        <span>아직 작성된 게시글이 없습니다.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+
+                        {/* Data State */}
+                        {!isLoading && !isError && data?.content?.map((post) => (
                             <tr key={post.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <td className="py-2.5 px-3 text-center text-gray-400 dark:text-gray-500 text-xs">{post.id}</td>
                                 <td className="py-2.5 px-3">
@@ -100,13 +180,19 @@ export default function PostListPage() {
                                         className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-white hover:underline"
                                     >
                                         {post.title}
-                                        <span className="ml-1 text-gray-500 dark:text-gray-400 font-bold">[3]</span>
+                                        {post.commentCount > 0 && (
+                                            <span className="ml-1 text-gray-500 dark:text-gray-400 font-bold">
+                                                [{post.commentCount}]
+                                            </span>
+                                        )}
                                     </Link>
                                 </td>
                                 <td className="py-2.5 px-3 text-center text-xs">
-                                    <span className="text-gray-600 dark:text-gray-300">{post.author}</span>
+                                    <span className="text-gray-600 dark:text-gray-300">{post.author.nickname}</span>
                                 </td>
-                                <td className="py-2.5 px-3 text-center text-gray-400 dark:text-gray-500 text-xs">{post.date}</td>
+                                <td className="py-2.5 px-3 text-center text-gray-400 dark:text-gray-500 text-xs">
+                                    {formatDate(post.createdAt)}
+                                </td>
                                 <td className="py-2.5 px-3 text-center text-gray-500 dark:text-gray-400 text-xs">{post.views}</td>
                             </tr>
                         ))}
@@ -114,25 +200,36 @@ export default function PostListPage() {
                 </table>
 
                 {/* Pagination */}
-                <div className="flex justify-center gap-1 mt-6">
-                    <button className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                        ◀ 이전
-                    </button>
-                    {[1, 2, 3, 4, 5].map((page) => (
+                {data && data.totalPages > 1 && (
+                    <div className="flex justify-center gap-1 mt-6">
                         <button
-                            key={page}
-                            className={`px-3 py-1.5 text-sm border rounded ${page === 1
-                                ? 'bg-gray-700 dark:bg-gray-600 text-white border-gray-700 dark:border-gray-600'
-                                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                }`}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={data.first}
+                            className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {page}
+                            ◀ 이전
                         </button>
-                    ))}
-                    <button className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                        다음 ▶
-                    </button>
-                </div>
+                        {getPageNumbers().map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => handlePageChange(page)}
+                                className={`px-3 py-1.5 text-sm border rounded ${page === currentPage
+                                    ? 'bg-gray-700 dark:bg-gray-600 text-white border-gray-700 dark:border-gray-600'
+                                    : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={data.last}
+                            className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            다음 ▶
+                        </button>
+                    </div>
+                )}
             </div>
 
             <LoginDialog

@@ -1,31 +1,98 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import ThemeToggle from '../components/ThemeToggle'
+import { usePostDetail, useDeletePost } from '../features/posts/hooks/usePosts'
+import { useAuthStore } from '../features/auth/hooks/useAuthStore'
+import CommentSection from '../features/comments/components/CommentSection'
 
-// Mock data
-const mockPost = {
-    id: 101234,
-    title: '첫 번째 게시글입니다',
-    author: '독서가',
-    date: '2025.12.22 12:45:30',
-    content: `안녕하세요, 이것은 첫 번째 게시글의 전체 내용입니다.
-
-블로그 스타일로 깔끔하게 보여주는 것이 목표입니다.
-여러 줄의 텍스트도 잘 표시되어야 합니다.
-
-이렇게 단락을 나눠서 작성할 수도 있습니다.`,
-    views: 124,
-    upvotes: 15,
-    downvotes: 2,
+/**
+ * Formats date string for display
+ */
+const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    })
 }
 
-const mockComments = [
-    { id: 1, author: '책벌레', content: '좋은 글이네요', date: '12:50' },
-    { id: 2, author: '김철수', content: '잘 읽었습니다', date: '12:55' },
-    { id: 3, author: '독서왕', content: '추천합니다', date: '13:00' },
-]
-
 export default function PostDetailPage() {
-    const { id: _id } = useParams()
+    const { id } = useParams<{ id: string }>()
+    const navigate = useNavigate()
+    const postId = Number(id) || 0
+
+    const { isAuthenticated } = useAuthStore()
+    const { data: post, isLoading, isError, error } = usePostDetail(postId)
+    const deletePostMutation = useDeletePost()
+
+    const handleDelete = async () => {
+        if (!window.confirm('정말 삭제하시겠습니까?')) return
+
+        try {
+            await deletePostMutation.mutateAsync(postId)
+            navigate('/')
+        } catch {
+            alert('삭제에 실패했습니다.')
+        }
+    }
+
+    // Loading State
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+                        <Link to="/" className="text-xl font-bold text-gray-700 dark:text-gray-200">
+                            📚 HHBookClub
+                        </Link>
+                        <ThemeToggle />
+                    </div>
+                </header>
+                <div className="max-w-5xl mx-auto px-4 py-12">
+                    <div className="flex flex-col items-center gap-4 text-gray-500 dark:text-gray-400">
+                        <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-gray-300 rounded-full animate-spin" />
+                        <span>게시글을 불러오는 중...</span>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // Error State
+    if (isError || !post) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+                        <Link to="/" className="text-xl font-bold text-gray-700 dark:text-gray-200">
+                            📚 HHBookClub
+                        </Link>
+                        <ThemeToggle />
+                    </div>
+                </header>
+                <div className="max-w-5xl mx-auto px-4 py-12">
+                    <div className="flex flex-col items-center gap-4 text-red-500 dark:text-red-400">
+                        <span className="text-4xl">⚠️</span>
+                        <span className="text-lg font-medium">게시글을 불러오는데 실패했습니다.</span>
+                        <span className="text-sm text-gray-500">
+                            {error instanceof Error ? error.message : '게시글을 찾을 수 없습니다.'}
+                        </span>
+                        <Link
+                            to="/"
+                            className="mt-4 px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                            목록으로 돌아가기
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -55,66 +122,39 @@ export default function PostDetailPage() {
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded">
                     {/* Post Header */}
                     <div className="border-b border-gray-200 dark:border-gray-700 p-4">
-                        <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">{mockPost.title}</h1>
+                        <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">{post.title}</h1>
                         <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span>닉네임: <span className="text-gray-700 dark:text-gray-300">{mockPost.author}</span></span>
-                            <span>작성일: {mockPost.date}</span>
-                            <span>조회: {mockPost.views}</span>
-                            <span>추천: {mockPost.upvotes}</span>
+                            <span>닉네임: <span className="text-gray-700 dark:text-gray-300">{post.author.nickname}</span></span>
+                            <span>작성일: {formatDate(post.createdAt)}</span>
+                            <span>조회: {post.views}</span>
+                            <span>추천: {post.upvotes}</span>
                         </div>
                     </div>
 
                     {/* Post Body */}
-                    <div className="p-6 min-h-[200px] text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-line border-b border-gray-200 dark:border-gray-700">
-                        {mockPost.content}
+                    <div className="p-6 min-h-[200px] border-b border-gray-200 dark:border-gray-700">
+                        <article className="prose dark:prose-invert max-w-none break-words">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {post.content}
+                            </ReactMarkdown>
+                        </article>
                     </div>
 
                     {/* Vote Buttons */}
                     <div className="flex justify-center gap-4 py-4 bg-gray-50 dark:bg-gray-700/50">
                         <button className="flex flex-col items-center px-6 py-2 border border-gray-400 dark:border-gray-500 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
                             <span className="text-lg">▲</span>
-                            <span className="text-sm font-bold">{mockPost.upvotes}</span>
+                            <span className="text-sm font-bold">{post.upvotes}</span>
                         </button>
                         <button className="flex flex-col items-center px-6 py-2 border border-gray-400 dark:border-gray-500 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
                             <span className="text-lg">▼</span>
-                            <span className="text-sm font-bold">{mockPost.downvotes}</span>
+                            <span className="text-sm font-bold">{post.downvotes}</span>
                         </button>
                     </div>
                 </div>
 
                 {/* Comments Section */}
-                <div className="mt-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded">
-                    <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                        <span className="font-bold text-sm text-gray-700 dark:text-gray-300">댓글 {mockComments.length}개</span>
-                    </div>
-                    <ul>
-                        {mockComments.map((comment) => (
-                            <li key={comment.id} className="p-3 border-b border-gray-100 dark:border-gray-700 text-sm">
-                                <div className="flex gap-2 mb-1">
-                                    <span className="text-gray-600 dark:text-gray-300">
-                                        {comment.author}
-                                    </span>
-                                    <span className="text-gray-400 dark:text-gray-500">{comment.date}</span>
-                                </div>
-                                <p className="text-gray-700 dark:text-gray-300">{comment.content}</p>
-                            </li>
-                        ))}
-                    </ul>
-
-                    {/* Comment Input */}
-                    <div className="p-3 bg-gray-50 dark:bg-gray-700/50">
-                        <textarea
-                            placeholder="댓글을 입력하세요"
-                            className="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded resize-none bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500"
-                            rows={2}
-                        />
-                        <div className="flex justify-end mt-2">
-                            <button className="px-4 py-1.5 text-sm bg-gray-700 dark:bg-gray-600 text-white rounded hover:bg-gray-800 dark:hover:bg-gray-500">
-                                등록
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <CommentSection postId={postId} isAuthenticated={isAuthenticated} />
 
                 {/* Navigation */}
                 <div className="flex justify-between mt-4">
@@ -124,16 +164,26 @@ export default function PostDetailPage() {
                     >
                         목록
                     </Link>
-                    <div className="flex gap-2">
-                        <button className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                            수정
-                        </button>
-                        <button className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                            삭제
-                        </button>
-                    </div>
+                    {isAuthenticated && (
+                        <div className="flex gap-2">
+                            <Link
+                                to={`/posts/${postId}/edit`}
+                                className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                수정
+                            </Link>
+                            <button
+                                onClick={handleDelete}
+                                disabled={deletePostMutation.isPending}
+                                className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                            >
+                                {deletePostMutation.isPending ? '삭제 중...' : '삭제'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     )
 }
+
