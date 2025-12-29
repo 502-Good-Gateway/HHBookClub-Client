@@ -7,7 +7,7 @@ import React from 'react';
 const GoogleLoginButton: React.FC = () => {
     const handleLogin = () => {
         const backendBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-        window.location.href = `${backendBaseUrl}/oauth2/authorization/google`;
+        window.location.href = `${backendBaseUrl}/api/oauth2/authorization/google`;
     };
 
     return (
