@@ -39,6 +39,7 @@ export const useImageUpload = (): UseImageUploadReturn => {
             setUploadedUrl(imageUrl);
             return imageUrl;
         } catch (err) {
+            console.error('이미지 업로드 에러:', err);
             const message =
                 err instanceof Error ? err.message : '업로드에 실패했습니다.';
             setError(message);
